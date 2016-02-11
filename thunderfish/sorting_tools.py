@@ -153,3 +153,5 @@ def save_fundamentals(fishlist, output_folder):
     np.save(file_name, fundamentals)
 
     print 'current fundamental frequencies are: ', fundamentals
+
+    return file_name

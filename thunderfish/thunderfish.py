@@ -81,7 +81,7 @@ def main(audio_file, channel=0, output_folder='.' + os.path.sep + 'analysis_outp
                                fishlist, pulse_data, pulse_freq, out_folder)
 
         # saves fundamentals of all wave fish !!!
-        st.save_fundamentals(fishlist, out_folder)
+        npy_wave_filename = st.save_fundamentals(fishlist, out_folder)
 
         print('\nAnalysis completed! .npy arrays located in %s\n' %out_folder)
 
