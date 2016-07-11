@@ -2,7 +2,7 @@
 Functions for checking whether a pulse-type or a wave-type is present in a recording.
 
 check_pulse_width(): checks for a pulse-type fish based on the width of detected peaks.
-check_pulse_psd(): checks for puls_type fish based on its signature on the power sepctrum.
+check_pulse_psd(): checks for pulse_type fish based on its signature on the power spectrum.
 """
 
 import numpy as np
