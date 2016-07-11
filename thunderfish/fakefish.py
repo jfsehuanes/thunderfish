@@ -25,7 +25,7 @@ import numpy as np
 
 
 def generate_wavefish(frequency=100.0, samplerate=44100., duration=1., noise_std=0.05,
-                      amplitudes=1.0):
+                      amplitudes=1.0, jitter_percentile=0.02):
     """Generate EOD of a wave-type fish.
 
     The waveform is constructed by superimposing sinewaves of integral multiples of
@@ -46,24 +46,48 @@ def generate_wavefish(frequency=100.0, samplerate=44100., duration=1., noise_std
 
     :return data: (array). Generated data of a wave-type fish.
     """
+    def jitter_wave(data, jitter_percentile):
+
+        # Determine pk2tr amplitude
+        pk = np.max(data)
+        tr = np.min(data)
+        pk2tr = np.abs(tr) + pk
+
+        jitt_th = tr + jitter_percentile * pk2tr  # sets threshold. values under th will be jittered.
+        low_indices = np.where(data < jitt_th)[0]  # indices where data < jitt_th
+        data_ls = data.tolist()
+        marker = 0
+        for idx in low_indices:
+            if np.random.randn(1)[0] >= 0.:
+                data_ls.insert(idx+marker, data_ls[idx+marker])
+                marker += 1
+
+        jittered_data = np.asarray(data_ls)
+
+        return jittered_data
+
     time = np.arange(0, duration, 1./samplerate)
     data = np.zeros(len(time))
+
     if np.isscalar(amplitudes):
         amplitudes = [amplitudes]
     for har, ampl in enumerate(amplitudes):
         data += ampl * np.sin(2*np.pi*time*(har+1)*frequency)
     # add noise:
     data += noise_std * np.random.randn(len(data))
+    # add jitter (make the EOD's trough little longer/shorter)
+    data = jitter_wave(data, jitter_percentile)
+
     return data
 
 
-def generate_alepto(frequency=100.0, samplerate=44100., duration=1., noise_std=0.01):
+def generate_alepto(frequency=100.0, samplerate=44100., duration=1., noise_std=0.01, jitter_percentile=0.02):
     """Generate EOD of a Apteronotus leptorhynchus.
 
     See generate_wavefish() for details.
     """
     return generate_wavefish(frequency=frequency, samplerate=samplerate, duration=duration,
-                             noise_std=noise_std, amplitudes=[1.0, 0.5, 0.0, 0.01])
+                             noise_std=noise_std, amplitudes=[1.0, 0.5, 0.0, 0.01], jitter_percentile=jitter_percentile)
 
 
 def generate_pulsefish(frequency=100.0, samplerate=44100., duration=1., noise_std=0.01,
@@ -176,9 +200,9 @@ if __name__ == '__main__':
     # generate data:
     time = np.arange(0, rec_length, 1./samplerate)
 
-    wavefish = generate_wavefish(300., samplerate, duration=rec_length, noise_std=0.02, 
-                                 amplitudes=[1.0, 0.5, 0.0, 0.01])
-    #wavefish = generate_alepto(300., samplerate, duration=rec_length)
+    wavefish = generate_wavefish(300., samplerate, duration=rec_length, noise_std=0.02,
+                                 amplitudes=[1.0, 0.5, 0.0, 0.01], jitter_percentile=0.02)
+    time_wavef = np.arange(0, rec_length, 1./len(wavefish))  # After jitter, the data array is longer! ToDo: Find alternative!
 
     pulsefish = generate_pulsefish(80., samplerate, duration=rec_length,
                                    noise_std=0.02, jitter_cv=0.1,
@@ -202,12 +226,12 @@ if __name__ == '__main__':
     # complete wavefish:
     ax[0][0].set_title('Wavefish')
     ax[0][0].set_ylim(ymin, ymax)
-    ax[0][0].plot(time, wavefish)
+    ax[0][0].plot(time_wavef, wavefish)
 
     # wavefish zoom in:
     ax[0][1].set_title('Wavefish ZOOM IN')
     ax[0][1].set_ylim(ymin, ymax)
-    ax[0][1].plot(time[:inset_indices], wavefish[:inset_indices], '-o')
+    ax[0][1].plot(time_wavef[:inset_indices], wavefish[:inset_indices], '-o')
 
     # get proper pulsefish ylim
     ymin = np.min(pulsefish)
@@ -232,4 +256,8 @@ if __name__ == '__main__':
             c_ax.set_ylabel('Amplitude [a.u.]')
 
     plt.tight_layout()
+
+    from IPython import embed
+    embed()
+    quit()
     plt.show()
