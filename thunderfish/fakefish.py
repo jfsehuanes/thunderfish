@@ -59,7 +59,7 @@ def generate_wavefish(frequency=100.0, samplerate=44100., duration=1., noise_std
         marker = 0
         for idx in low_indices:
             if np.random.randn(1)[0] >= 0.:
-                data_ls.insert(idx+marker, data_ls[idx+marker])
+                data_ls.insert(idx+marker, data_ls[idx+marker] * 0.998)
                 marker += 1
 
         jittered_data = np.asarray(data_ls)
@@ -257,7 +257,10 @@ if __name__ == '__main__':
 
     plt.tight_layout()
 
-    from IPython import embed
-    embed()
-    quit()
+    # fig2, ax2 = plt.subplots(figsize=(19, 10))
+    # import powerspectrum as ps
+    # psd_data = ps.multi_resolution_psd(wavefish, len(wavefish))
+    # ax2.plot(psd_data[1], psd_data[0])
+    # ax2.set_xlim([0, 1000])
+
     plt.show()
